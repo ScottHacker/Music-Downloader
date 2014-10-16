@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    	<title>Music Downloader</title>
+        <link href="/static/style.css" rel="stylesheet">
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css">
+        <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+        <script src="/static/script.js" type="text/javascript"></script>
+        <script src="//code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
+    </head>
+    <body>
+        <input type="text" value="" id="url" />
+        <button id="metadata">i</button>
+        <button id="download">Run Download</button>
+        
+        <div id="dialog" title="Basic dialog">
+        	<p>This is the default dialog which is useful for displaying information. The dialog window can be moved, resized and closed with the 'x' icon.</p>
+            <p>Artist: <input type="text" value="" id="artist" /></p>
+            <p>Title: <input type="text" value="" id="title" /></p>
+            <p>Album: <input type="text" value="" id="album" /></p>
+            <p>Genre: <select id="genre">
+              <option>Blues</option>
+              <option>Classic Rock</option>
+              <option>Country</option>
+            </select></p>
+            <p>Year: <input id="year" type="number" value="2014"/></p>
+        </div>
+    </body>
+</html>
