@@ -22,7 +22,8 @@ class Downloader(object):
       try:
          d = cherrypy.request.json
 
-         print "Artist: {0}, Title: {1}, Year: {2}".format(d['Artist'], d['Title'], d['Year'])
+         print "Artist: {0}, Title: {1}, Album: {2}, Year: {3}, Genre: {4}".format(d['Artist'], d['Title'], d['Album'], d['Year'], d['Genre'])
+         print "Url: " + d['Url'];
          file = file_name.format(artist=d['Artist'], title=d['Title'], year=d['Year'])
          full_path = destination_path + file + ".%(ext)s"
          cmd = download_command.format(format=audio_format, url=d['Url'], savepath=full_path)
