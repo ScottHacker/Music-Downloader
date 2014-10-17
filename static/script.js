@@ -1,13 +1,5 @@
-var downloadObj2 = [{"Url" : "https://www.youtube.com/watch?v=a5uQMwRMHcs", "Title" : "Instant Crush", "Artist" : "Daft Punk", "Genre": "Electronic", "Year" : 2013, "Album" : "Random Access Memories"}, { "Url" : "https://www.youtube.com/watch?v=KT59sFCmVcs", "Title" : "Big Day for the Little People", "Artist" : "Godforbid and Thirtyseven", "Genre" : "Hip-hop", "Year" : 2007, "Album" : ""}];
-var download2 = {"Url" : "https://www.youtube.com/watch?v=HM_PFEZTdTQ", "Title" : "Little Booty Girl", "Artist" : "Thunderheist", "Genre": "Hip-hop","Year" : 2008, "Album" : ""};
-
-var downloadList = {};
-var songNum = 2;
-var currentForm = 1;
-
 /*
 TODO:
-- Dynamically generate forms
 - Retrieve metadata button
 - Get Thumbnail/name of video for dialog
 - Download status feedback (percentage?)
@@ -19,18 +11,92 @@ TODO:
 - CSS Setup
 */
 
+// List of Genres for Metadata
+var genres = ['Blues', 'Classic Rock', 'Country', 'Dance', 'Disco', 'Funk', 'Grunge', 'Hip-Hop', 'Jazz', 'Metal', 'New Age', 'Oldies',
+			  'Other', 'Pop', 'Rhythm and Blues', 'Rap', 'Reggae', 'Rock', 'Techno', 'Industrial'];
+
+// Global variables
+var metadataList = [];
+var songNum = -1;
+var currentForm = -1;
+
 $(document).ready(function() {			
-	setupDialog();
-	setupDownloadButton();
+	setupPage();
+	$("#dialog img").attr("src", "http://img.youtube.com/vi/L1729ufF37k/0.jpg");
 });
 
+// ***** SETUP FUNCTIONS *****
+
+// Main set up function
+function setupPage(){
+	setupDialog();
+	setupDownloadButton();
+	setupAddButton();
+	setupGenres();
+	addForm();
+}
+
+// Sets up a download button with event
+function setupDownloadButton(){
+	$("#download").click(function() {
+		downloadSongs();
+	}); 
+}
+
+function setupAddButton(){
+	$("#addFormButton").click(function() {
+		addForm();
+	});
+}
+
+// Sets up the dialog
+function setupDialog(){
+	// Dialog pop up code
+	$(function() {
+		$("#dialog").dialog({
+			autoOpen: false,
+			modal: true,
+			dialogClass: "dlg-no-title",
+			buttons: {
+				"Done": function() {
+					dialogCloseButtonClick();
+					$(this).dialog("close");	
+				}
+			}
+		});
+	});
+}
+
+// Adds genres to dialog drop down
+function setupGenres(){
+	for(var i = 0; i < genres.length; i++){
+		$("#genre").append("<option>"+genres[i]+"</option>");
+	}
+}
+
+// Runs when the Dialog's "Done" button is clicked
+function dialogCloseButtonClick(){
+	saveFieldsToJSON(currentForm);
+}
+
+// ***** DOWNLOAD FUNCTIONS *****
+
+// Runs AJAX to download songs to server
+// They will download simultaneously
 function downloadSongs() {
-	// This will download asynchronously
-	for(var i = 1; i <= songNum; i++){
+	for(var i = 0; i <= songNum; i++){
+		var url = $("#songForms .songDiv").eq(i).find(".urlForm").val();
+		if(url == "") continue; // URL is absolutely required, if it's not present then move on.
+		// Otherwise, if url is present, but no metadata, then send in the url with empty data
+		if(metadataList[i] != undefined){
+			metadataList[i]["Url"] = url;
+		} else {
+			metadataList[i]= {"Url":url, "Artist":"", "Title":"", "Album":"", "Genre":"", "Year":"" };
+		}
 		$.ajax({
 			type: "POST",
 			url: "/download",
-			data: JSON.stringify(downloadList["song" + i]),
+			data: JSON.stringify(metadataList[n]),
 			contentType: 'application/json',
 		})
 		.fail(function(jqXHR, textStatus, errorThrown) {
@@ -42,54 +108,55 @@ function downloadSongs() {
 	}
 }
 
+// Runs when a download is successful or failed
 function finishedDownload(success, msg) {
 	alert(msg);
 }
 
-function setupDownloadButton(){
-	$("#download").click(function(e) {
-		downloadSongs();
-	}); 
-}
+// ***** FORM FUNCTIONS *****
 
-function setupDialog(){
-	// Dialog pop up code
-	$(function() {
-		$("#dialog").dialog({
-			autoOpen: false,
-			modal: true,
-			dialogClass: "dlg-no-title",
-			buttons: {
-				"Dismiss": function() {
-					saveFieldsToJSON(currentForm);
-					$(this).dialog("close");
-				}
-			}
-		});
-	});
+// Adds a form to the page
+function addForm(){
+	songNum++;
+	var form = '<div class="songDiv">'+
+					'<input type="text" class="urlForm"/>'+
+					'<button class="metadataBtn">i</button>'+
+					'<button class="closeBtn">x</button>'+
+				'</div>';
+	$("#songForms").append(form);
 	
 	// Click event for opening dialog
-	$(".songBtn").on("click", function() {
-		currentForm = this.id;
+	$("#songForms .songDiv").eq(songNum).find(".metadataBtn").on("click", function() {
+		currentForm = $(this).parent().index();
 		populateFieldsFromJSON(currentForm);
 		$("#dialog").dialog("open");
-	}); 
+	});
+	
+	// Click event for close button
+	$("#songForms .songDiv").eq(songNum).find(".closeBtn").on("click", function() {
+		index = $("#songForms .songDiv").index($(this).parent());
+		metadataList.splice(index, 1);
+		$(this).parent().remove();
+		songNum--;
+	});
 }
 
+// Saves dialog forms to JSON a JSON object
 function saveFieldsToJSON(n) {
 	var downloadObj = {
-		"Url": $("#" + n + ".urlForm").val(), 
-		"Artist": $("#artist").val(), 
-		"Title": $("#title").val(), 
+		"Url": $("#songForms .songDiv").eq(n).find(".urlForm").val(), 
+		"Artist": $("#artist").val(),
+		"Title": $("#title").val(),
 		"Album": $("#album").val(), 
 		"Genre": $("#genre").val(), 
 		"Year": $("#year").val()
 	};
-	downloadList["song" + n] = downloadObj;
+	metadataList[n] = downloadObj;
 }
 
+// Populates dialog forms from a JSON object, or gives default values
 function populateFieldsFromJSON(n){
-	var jsonObj = downloadList["song" + n];
+	var jsonObj = metadataList[n];
 	if(jsonObj != undefined){
 		$("#artist").val(jsonObj["Artist"]);
 		$("#title").val(jsonObj["Title"]);
