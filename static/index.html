@@ -9,30 +9,22 @@
         <script src="//code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
     </head>
     <body>
-      <div id="songForms">
-        <div class="songDiv" id="1">
-          <input type="text" value="" class="urlForm" id="1" />
-          <button class="songBtn" id="1">i</button>
-        </div>
-        <div class="songDiv" id="2">
-          <input type="text" value="" class="urlForm" id="2" />
-          <button class="songBtn" id="2">i</button>
-        </div>
-      </div>
-
-      <button id="download">Run Download</button>
+    	<button id="addFormButton">+</button>
+    
+        <div id="songForms"></div>
+    
+        <button id="download">Run Download</button>
         
-      <div id="dialog" title="Basic dialog">
-        <p>Enter metadata for the song:</p>
-        <p>Artist: <input type="text" value="" id="artist" /></p>
-        <p>Title: <input type="text" value="" id="title" /></p>
-        <p>Album: <input type="text" value="" id="album" /></p>
-        <p>Genre: <select id="genre">
-            <option>Blues</option>
-            <option>Classic Rock</option>
-            <option>Country</option>
-        </select></p>
-        <p>Year: <input id="year" type="number" value="2014"/></p>
-      </div>
+        <div id="dialog" title="Basic dialog">
+            <div id="videoTitle"><div>
+            <img src=""></img>
+            <p>Enter metadata for the song:</p>
+            <p>Artist: <input type="text" value="" id="artist" /></p>
+            <p>Title: <input type="text" value="" id="title" /></p>
+            <p>Album: <input type="text" value="" id="album" /></p>
+            <p>Genre: <select id="genre">
+            </select></p>
+            <p>Year: <input id="year" type="number" value="2014"/></p>
+        </div>
     </body>
 </html>
