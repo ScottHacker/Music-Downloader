@@ -6,6 +6,10 @@ body {
   display: none;
 }
 
+#dialog img {
+	width: 250px;	
+}
+
 /*For Pop up*/
 .dlg-no-title .ui-dialog-titlebar {
 	display: none;
