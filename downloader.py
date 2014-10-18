@@ -2,13 +2,34 @@ import os, os.path
 import json
 import random
 import string
-
+import ConfigParser
 import cherrypy
 
 class Downloader(object):
    @cherrypy.expose
    def index(self):
-       return file('static/index.html')
+      return file('static/index.html')
+
+   @cherrypy.expose
+   @cherrypy.tools.json_out()
+   @cherrypy.tools.json_in()
+   def config(self):
+      conf_file = 'downloader.conf'
+      conf_section = 'settings'
+      parser = ConfigParser.SafeConfigParser()
+      parser.read(conf_file)
+
+      if cherrypy.request.method == 'POST':
+         settings = cherrypy.request.json
+
+         for candidate in settings.keys():
+            if parser.has_option(conf_section, candidate):
+               parser.set(conf_section, candidate, '"' + settings[candidate] + '"')
+
+         with open(conf_file, 'wb') as f:
+            parser.write(f)
+
+      return json.dumps(parser._sections[conf_section])
 
    @cherrypy.expose
    @cherrypy.tools.json_in()
