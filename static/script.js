@@ -22,7 +22,6 @@ var currentForm = -1;
 
 $(document).ready(function() {			
 	setupPage();
-	$("#dialog img").attr("src", "http://img.youtube.com/vi/L1729ufF37k/0.jpg");
 });
 
 // ***** SETUP FUNCTIONS *****
@@ -43,6 +42,7 @@ function setupDownloadButton(){
 	}); 
 }
 
+// Sets up a button to add forms
 function setupAddButton(){
 	$("#addFormButton").click(function() {
 		addForm();
@@ -85,7 +85,7 @@ function dialogCloseButtonClick(){
 // They will download simultaneously
 function downloadSongs() {
 	for(var i = 0; i <= songNum; i++){
-		var url = $("#songForms .songDiv").eq(i).find(".urlForm").val();
+		var url = $("#songDiv .songForm").eq(i).find(".urlForm").val();
 		if(url == "") continue; // URL is absolutely required, if it's not present then move on.
 		// Otherwise, if url is present, but no metadata, then send in the url with empty data
 		if(metadataList[i] != undefined){
@@ -118,23 +118,24 @@ function finishedDownload(success, msg) {
 // Adds a form to the page
 function addForm(){
 	songNum++;
-	var form = '<div class="songDiv">'+
+	var form = '<div class="songForm">'+
 					'<input type="text" class="urlForm"/>'+
 					'<button class="metadataBtn">i</button>'+
 					'<button class="closeBtn">x</button>'+
 				'</div>';
-	$("#songForms").append(form);
+	$("#songDiv").append(form);
 	
 	// Click event for opening dialog
-	$("#songForms .songDiv").eq(songNum).find(".metadataBtn").on("click", function() {
+	$("#songDiv .songForm").eq(songNum).find(".metadataBtn").on("click", function() {
 		currentForm = $(this).parent().index();
 		populateFieldsFromJSON(currentForm);
+		setThumbnail($(this).parent().find(".urlForm").val());
 		$("#dialog").dialog("open");
 	});
 	
 	// Click event for close button
-	$("#songForms .songDiv").eq(songNum).find(".closeBtn").on("click", function() {
-		index = $("#songForms .songDiv").index($(this).parent());
+	$("#songDiv .songForm").eq(songNum).find(".closeBtn").on("click", function() {
+		index = $("#songDiv .songForm").index($(this).parent());
 		metadataList.splice(index, 1);
 		$(this).parent().remove();
 		songNum--;
@@ -144,7 +145,6 @@ function addForm(){
 // Saves dialog forms to JSON a JSON object
 function saveFieldsToJSON(n) {
 	var downloadObj = {
-		"Url": $("#songForms .songDiv").eq(n).find(".urlForm").val(), 
 		"Artist": $("#artist").val(),
 		"Title": $("#title").val(),
 		"Album": $("#album").val(), 
@@ -172,3 +172,23 @@ function populateFieldsFromJSON(n){
 	}
 }
 
+// ***** UTILITY FUNCTIONS *****
+
+// Get the key of the video
+function getKey(url) {
+	return url.match(/youtube\.com.*(\?v=|\/embed\/)(.{11})/).pop();
+}
+
+// Set a video thumbnail in the dialog, or hide the image if nothing can be found
+function setThumbnail(url){
+	var imgUrl = "";
+	if(url.match(/youtube/) != null){
+		imgUrl = "http://img.youtube.com/vi/" + getKey(url) + "/0.jpg";
+	}
+	if(imgUrl != ""){
+		$("#dialog img").css('display', 'block');
+		$("#dialog img").attr("src", imgUrl);
+	} else {
+		$("#dialog img").css('display', 'none');
+	}
+}
