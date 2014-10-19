@@ -3,11 +3,7 @@ TODO:
 - Retrieve metadata button
 - Get Thumbnail/name of video for dialog
 - Download status feedback (percentage?)
-- Settings Dialog
--- File Name Format
--- Save location
--- Turn spaces to underscores
--- Save settings to file on server
+- Get Default selected dropdown working
 - CSS Setup
 */
 
@@ -28,10 +24,11 @@ $(document).ready(function() {
 
 // Main set up function
 function setupPage(){
-	setupDialog();
+	setupDialogs();
 	setupDownloadButton();
 	setupAddButton();
-	setupGenres();
+	setupConfigButton();
+	fillDropdown("#genre", genres);
 	addForm();
 }
 
@@ -49,14 +46,20 @@ function setupAddButton(){
 	});
 }
 
+// Sets up the config button
+function setupConfigButton(){
+	$("#configButton").click(function() {
+		$("#configDialog").dialog("open");
+	});
+}
+
 // Sets up the dialog
-function setupDialog(){
+function setupDialogs(){
 	// Dialog pop up code
 	$(function() {
-		$("#dialog").dialog({
+		$("#formDialog").dialog({
 			autoOpen: false,
 			modal: true,
-			dialogClass: "dlg-no-title",
 			buttons: {
 				"Done": function() {
 					dialogCloseButtonClick();
@@ -65,12 +68,29 @@ function setupDialog(){
 			}
 		});
 	});
+	
+	// Dialog pop up code
+	$(function() {
+		$("#configDialog").dialog({
+			autoOpen: false,
+			modal: true,
+			buttons: {
+				"Save": function() {
+					saveConfig();
+					$(this).dialog("close");	
+				}
+			}
+		});
+	});
+	
+	// Fill settings from server
+	populateConfigDialog();
 }
 
-// Adds genres to dialog drop down
-function setupGenres(){
-	for(var i = 0; i < genres.length; i++){
-		$("#genre").append("<option>"+genres[i]+"</option>");
+// Generic dropdown fill
+function fillDropdown(id, values) {
+	for(var i =  0; i < values.length; i++){
+		$(id).append("<option>"+values[i]+"</option>");	
 	}
 }
 
@@ -130,7 +150,7 @@ function addForm(){
 		currentForm = $(this).parent().index();
 		populateFieldsFromJSON(currentForm);
 		setThumbnail($(this).parent().find(".urlForm").val());
-		$("#dialog").dialog("open");
+		$("#formDialog").dialog("open");
 	});
 	
 	// Click event for close button
@@ -186,9 +206,50 @@ function setThumbnail(url){
 		imgUrl = "http://img.youtube.com/vi/" + getKey(url) + "/0.jpg";
 	}
 	if(imgUrl != ""){
-		$("#dialog img").css('display', 'block');
-		$("#dialog img").attr("src", imgUrl);
+		$("#formDialog img").css('display', 'block');
+		$("#formDialog img").attr("src", imgUrl);
 	} else {
-		$("#dialog img").css('display', 'none');
+		$("#formDialog img").css('display', 'none');
 	}
+}
+
+function processString(str){
+	str = str.replace( new RegExp(/"/g), "");
+	str = str.toLowerCase();
+	return str;
+}
+
+function populateConfigDialog(){
+	$.getJSON('/config', function( data ) {
+		$.each( $.parseJSON(data), function( key, val ) {
+			if( $('#' + key).length ){
+				pVal = processString(val);
+				if(pVal == "false" || pVal == "true"){
+					$('#' + key).attr('checked', pVal == 'true' ? true : false);
+				} else {
+					$('#' + key).val(pVal);
+				}
+			} else if (key == 'supported_formats'){
+				fillDropdown("#format", val);
+			}
+		});
+	});
+}
+
+function saveConfig(){
+	jsonObj = {}
+	$("#configDialog input, #configDialog select").each( function(key, value) {
+		if(this.type != "checkbox") {
+			jsonObj[$(this).attr('id')] = this.value;
+		} else {
+			jsonObj[$(this).attr('id')] = $(this).is(':checked');
+		}
+	});
+
+	$.ajax({
+		type: "POST",
+		url: "/config",
+		data: JSON.stringify(jsonObj),
+		contentType: 'application/json',
+	});
 }
