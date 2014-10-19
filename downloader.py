@@ -5,7 +5,17 @@ import string
 import ConfigParser
 import cherrypy
 
+supported_formats = ['mp3', 'ogg']
+conf_file = 'downloader.conf'
+conf_section = 'settings'
+
+
+
 class Downloader(object):
+
+   def formatInput(self, inputVal):
+         return '"' + str(inputVal) + '"'
+
    @cherrypy.expose
    def index(self):
       return file('static/index.html')
@@ -14,8 +24,6 @@ class Downloader(object):
    @cherrypy.tools.json_out()
    @cherrypy.tools.json_in()
    def config(self):
-      conf_file = 'downloader.conf'
-      conf_section = 'settings'
       parser = ConfigParser.SafeConfigParser()
       parser.read(conf_file)
 
@@ -24,19 +32,24 @@ class Downloader(object):
 
          for candidate in settings.keys():
             if parser.has_option(conf_section, candidate):
-               parser.set(conf_section, candidate, '"' + settings[candidate] + '"')
+               parser.set(conf_section, candidate, self.formatInput(settings[candidate]))
 
          with open(conf_file, 'wb') as f:
             parser.write(f)
 
-      return json.dumps(parser._sections[conf_section])
+      settings = parser._sections[conf_section]
+      settings['supported_formats'] = supported_formats
+      return json.dumps(settings)
 
    @cherrypy.expose
    @cherrypy.tools.json_in()
    def download(self):
-      audio_format = "mp3"
-      destination_path = "/media/readyshare/Music/"
-      file_name = "{artist} - {title}"
+      parser = ConfigParser.SafeConfigParser()
+      parser.read(conf_file)
+
+      audio_format = parser.get(conf_section, 'format')
+      destination_path = parser.get(conf_section, 'download_path')
+      file_name = parser.get(conf_section, 'file_name')
       download_command = "youtube-dl -x --audio-format {format} '{url}' -o '{savepath}'"
       metadata_command = "--exec 'mp3info -t \"{title}\" -a \"{artist}\" -l \"{album}\" -g \"{genre}\" -y \"{year}\" -c \"{comments}\"'"
 
