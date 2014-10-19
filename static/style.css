@@ -2,7 +2,7 @@ body {
   background-color: blue;
 }
 
-#dialog img {
+#formDialog img {
 	width: 250px;	
 }
 
@@ -25,9 +25,4 @@ body {
 
 #songForm {
 
-}
-
-/*For Pop up*/
-.dlg-no-title .ui-dialog-titlebar {
-	display: none;
 }
