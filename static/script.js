@@ -1,5 +1,7 @@
 /*
 TODO:
+- Check path, If path doesn't exist let the user know
+- Disable "Run Download" button while server is rebooting after new settings.
 - Retrieve metadata button
 - Get Thumbnail/name of video for dialog
 - Download status feedback (percentage?)
@@ -34,7 +36,7 @@ function setupPage(){
 
 // Sets up a download button with event
 function setupDownloadButton(){
-	$("#download").click(function() {
+	$("#downloadButton").click(function() {
 		downloadSongs();
 	}); 
 }
@@ -75,9 +77,8 @@ function setupDialogs(){
 			autoOpen: false,
 			modal: true,
 			buttons: {
-				"Save": function() {
+				"Apply": function() {
 					saveConfig();
-					$(this).dialog("close");	
 				}
 			}
 		});
@@ -116,7 +117,7 @@ function downloadSongs() {
 		$.ajax({
 			type: "POST",
 			url: "/download",
-			data: JSON.stringify(metadataList[n]),
+			data: JSON.stringify(metadataList[i]),
 			contentType: 'application/json',
 		})
 		.fail(function(jqXHR, textStatus, errorThrown) {
@@ -220,6 +221,7 @@ function processString(str){
 }
 
 function populateConfigDialog(){
+	$('#pathNotFound').css('display','none');
 	$.getJSON('/config', function( data ) {
 		$.each( $.parseJSON(data), function( key, val ) {
 			if( $('#' + key).length ){
@@ -251,5 +253,11 @@ function saveConfig(){
 		url: "/config",
 		data: JSON.stringify(jsonObj),
 		contentType: 'application/json',
+		dataType: "json",
+		success: function (data) {
+			// If path isn't found, let the user know
+			var pathFound = $.parseJSON(data).found_path;
+			$('#pathNotFound').css('display', pathFound? 'none' : 'block');
+		}
 	});
 }
