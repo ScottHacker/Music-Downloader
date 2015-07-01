@@ -10,32 +10,33 @@
     </head>
     <body>
     	<div id="mainDiv">
-            <button id="addFormButton">+</button>
+        	<div id="title">
+                <div class="button" id="configButton">=</div>
+                <div id="text">Music Downloader</div>
+                <div class="button" id="addFormButton">+</div>
+            </div>
         
             <div id="songDiv"></div>
-        
-            <button id="downloadButton">Run Download</button>
+            <br />
+            <div class="button" id="downloadButton">Run Download</div>
         </div>
         
-        <button id="configButton">=</button>
-        
-        <div id="formDialog" class=".dialog" title="Metadata">
-            <div id="videoTitle"><div>
-            <img src=""></img>
-            <p>Artist: <input type="text" value="" id="artist" /></p>
-            <p>Title: <input type="text" value="" id="title" /></p>
-            <p>Album: <input type="text" value="" id="album" /></p>
-            <p>Genre: <select id="genre">
-            </select></p>
-            <p>Year: <input id="year" type="number" value="2014"/></p>
+        <div id="formDialog" class="dialog" title="Metadata">
+            <p><div id="videoTitle"/></p>
+            <p><img src=""/></p>
+            <p><label>Artist:<br/> <input type="text" value="" id="artist" /></label></p>
+            <p><label>Title:<br/> <input type="text" value="" id="songtitle" /></label></p>
+            <p><label>Album:<br/> <input type="text" value="" id="album" /></label></p>
+            <p><label>Genre:<br/> <select id="genre"><option></option></select></label></p>
+            <p><label>Year:<br/> <input id="yearRelease" type="number" value="2014"/></label></p>
         </div>
         
-        <div id="configDialog" class=".dialog" title="Settings">
+        <div id="configDialog" class="dialog" title="Settings">
             <p>Download Path: <input type="text" value="" id="download_path" />
             <div id="pathNotFound">* Path not found, will create new folder(s)</div></p>
-            <p>File Name Format: <input type="text" value="" id="file_name" /></p>
-            <p>Change Spaces to Underscores: <input type="checkbox" id="spaces_to_underscores" /></p>
-            <p>Audio Format: <select id="format"></select></p>
+            <p><label>File Name Format: <input type="text" value="" id="file_name" /></label></p>
+            <p><label>Change Spaces to Underscores: <input type="checkbox" id="spaces_to_underscores" /></label></p>
+            <p><label>Audio Format: <select id="format"></select></label></p>
         </div>
     </body>
 </html>

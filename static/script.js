@@ -1,17 +1,9 @@
 /*
 TODO:
-- Check path, If path doesn't exist let the user know
-- Disable "Run Download" button while server is rebooting after new settings.
 - Retrieve metadata button
 - Get Thumbnail/name of video for dialog
-- Download status feedback (percentage?)
-- Get Default selected dropdown working
 - CSS Setup
 */
-
-// List of Genres for Metadata
-var genres = ['Blues', 'Classic Rock', 'Country', 'Dance', 'Disco', 'Funk', 'Grunge', 'Hip-Hop', 'Jazz', 'Metal', 'New Age', 'Oldies',
-			  'Other', 'Pop', 'Rhythm and Blues', 'Rap', 'Reggae', 'Rock', 'Techno', 'Industrial'];
 
 // Global variables
 var metadataList = [];
@@ -30,27 +22,36 @@ function setupPage(){
 	setupDownloadButton();
 	setupAddButton();
 	setupConfigButton();
-	fillDropdown("#genre", genres);
+	$.get('/static/genres', function(data){
+		var genreList = data.split('||');
+		fillDropdown("#genre", genreList);
+	});
 	addForm();
 }
 
 // Sets up a download button with event
 function setupDownloadButton(){
-	$("#downloadButton").click(function() {
-		downloadSongs();
+	$(document).on("click", '#downloadButton:not(.disabled)', function() {
+		var downloadQueue = downloadSongs();
+
+		// Runs when everything is done
+		$.when.apply(null, downloadQueue).done(function(){
+			disableButtons(false);
+			alert('All Downloads finished');
+		});		
 	}); 
 }
 
 // Sets up a button to add forms
 function setupAddButton(){
-	$("#addFormButton").click(function() {
+	$(document).on("click", "#addFormButton:not(.disabled)", function() {
 		addForm();
 	});
 }
 
 // Sets up the config button
 function setupConfigButton(){
-	$("#configButton").click(function() {
+	$(document).on("click", "#configButton:not(.disabled)", function() {
 		$("#configDialog").dialog("open");
 	});
 }
@@ -89,9 +90,9 @@ function setupDialogs(){
 }
 
 // Generic dropdown fill
-function fillDropdown(id, values) {
+function fillDropdown(id, values, selected) {
 	for(var i =  0; i < values.length; i++){
-		$(id).append("<option>"+values[i]+"</option>");	
+		$(id).append("<option" + (values[i] == selected? ' selected' : '') + ">"+values[i]+"</option>");	
 	}
 }
 
@@ -105,33 +106,44 @@ function dialogCloseButtonClick(){
 // Runs AJAX to download songs to server
 // They will download simultaneously
 function downloadSongs() {
+	// Resetting and disabling UI
+	$("#songDiv .urlForm").css('background-color', 'white'); // Reset colors of all the forms
+	disableButtons(true);
+
+	var downloadQueue = [];
 	for(var i = 0; i <= songNum; i++){
-		var url = $("#songDiv .songForm").eq(i).find(".urlForm").val();
-		if(url == "") continue; // URL is absolutely required, if it's not present then move on.
-		// Otherwise, if url is present, but no metadata, then send in the url with empty data
-		if(metadataList[i] != undefined){
-			metadataList[i]["Url"] = url;
-		} else {
-			metadataList[i]= {"Url":url, "Artist":"", "Title":"", "Album":"", "Genre":"", "Year":"" };
-		}
-		$.ajax({
-			type: "POST",
-			url: "/download",
-			data: JSON.stringify(metadataList[i]),
-			contentType: 'application/json',
-		})
-		.fail(function(jqXHR, textStatus, errorThrown) {
-			finishedDownload(false, textStatus + " - " + errorThrown);
-		})
-		.done(function() {
-			finishedDownload(true, "Download finished");
-		});
+		(function(index){
+			var form = $("#songDiv .songForm").eq(index).find(".urlForm");
+			form.css('background-color', '#FFF9BA'); // highlight the currently downloading form
+			var url = form.val();
+			if(url == "") return; // URL is absolutely required, if it's not present then move on.
+			// Otherwise, if url is present, but no metadata, then send in the url with empty data
+			if(metadataList[index] != undefined){
+				metadataList[index]["Url"] = url;
+			} else {
+				metadataList[index]= {"Url":url, "Artist":"", "Title":"", "Album":"", "Genre":"", "Year":"" };
+			}
+			downloadQueue.push($.ajax({
+					type: "POST",
+					url: "/download",
+					data: JSON.stringify(metadataList[index]),
+					contentType: 'application/json',
+				})
+				.fail(function(jqXHR, textStatus, errorThrown) {
+					finishedDownload(false, form, textStatus + " - " + errorThrown);
+				})
+				.done(function(data) {
+					finishedDownload(data["Success"], form, data["Message"]);
+				})
+			);
+		})(i);
 	}
+	return downloadQueue;
 }
 
 // Runs when a download is successful or failed
-function finishedDownload(success, msg) {
-	alert(msg);
+function finishedDownload(success, form, msg) {
+	form.css('background-color', success? "green" : "red");
 }
 
 // ***** FORM FUNCTIONS *****
@@ -141,13 +153,13 @@ function addForm(){
 	songNum++;
 	var form = '<div class="songForm">'+
 					'<input type="text" class="urlForm"/>'+
-					'<button class="metadataBtn">i</button>'+
-					'<button class="closeBtn">x</button>'+
+					'<div class="button" id="metadataBtn">i</div>'+
+					'<div class="button" id="closeBtn">x</div>'+
 				'</div>';
 	$("#songDiv").append(form);
 	
 	// Click event for opening dialog
-	$("#songDiv .songForm").eq(songNum).find(".metadataBtn").on("click", function() {
+	$("#songDiv .songForm").eq(songNum).on("click", "#metadataBtn:not(.disabled)", function() {
 		currentForm = $(this).parent().index();
 		populateFieldsFromJSON(currentForm);
 		setThumbnail($(this).parent().find(".urlForm").val());
@@ -155,7 +167,7 @@ function addForm(){
 	});
 	
 	// Click event for close button
-	$("#songDiv .songForm").eq(songNum).find(".closeBtn").on("click", function() {
+	$("#songDiv .songForm").eq(songNum).on("click", "#closeBtn:not(.disabled)", function() {
 		index = $("#songDiv .songForm").index($(this).parent());
 		metadataList.splice(index, 1);
 		$(this).parent().remove();
@@ -167,10 +179,10 @@ function addForm(){
 function saveFieldsToJSON(n) {
 	var downloadObj = {
 		"Artist": $("#artist").val(),
-		"Title": $("#title").val(),
+		"Title": $("#songtitle").val(),
 		"Album": $("#album").val(), 
 		"Genre": $("#genre").val(), 
-		"Year": $("#year").val()
+		"Year": $("#yearRelease").val()
 	};
 	metadataList[n] = downloadObj;
 }
@@ -180,17 +192,21 @@ function populateFieldsFromJSON(n){
 	var jsonObj = metadataList[n];
 	if(jsonObj != undefined){
 		$("#artist").val(jsonObj["Artist"]);
-		$("#title").val(jsonObj["Title"]);
+		$("#songtitle").val(jsonObj["Title"]);
 		$("#album").val(jsonObj["Album"]);
 		$("#genre").val(jsonObj["Genre"]);
-		$("#year").val(jsonObj["Year"]);
+		$("#yearRelease").val(jsonObj["Year"]);
 	} else {
 		$("#artist").val("");
-		$("#title").val("");
+		$("#songtitle").val("");
 		$("#album").val("");
 		$("#genre").val("");
-		$("#year").val("");
+		$("#yearRelease").val("");
 	}
+}
+
+function disableButtons(disabling){
+	$('#mainDiv .button').toggleClass('disabled', disabling);
 }
 
 // ***** UTILITY FUNCTIONS *****
@@ -207,10 +223,10 @@ function setThumbnail(url){
 		imgUrl = "http://img.youtube.com/vi/" + getKey(url) + "/0.jpg";
 	}
 	if(imgUrl != ""){
-		$("#formDialog img").css('display', 'block');
+		$("#formDialog img").show();
 		$("#formDialog img").attr("src", imgUrl);
 	} else {
-		$("#formDialog img").css('display', 'none');
+		$("#formDialog img").hide();
 	}
 }
 
@@ -221,7 +237,7 @@ function processString(str){
 }
 
 function populateConfigDialog(){
-	$('#pathNotFound').css('display','none');
+	$('#pathNotFound').hide();
 	$.getJSON('/config', function( data ) {
 		$.each( $.parseJSON(data), function( key, val ) {
 			if( $('#' + key).length ){
@@ -232,7 +248,7 @@ function populateConfigDialog(){
 					$('#' + key).val(pVal);
 				}
 			} else if (key == 'supported_formats'){
-				fillDropdown("#format", val);
+				fillDropdown("#format", val, processString($.parseJSON(data)['format']));
 			}
 		});
 	});
@@ -257,7 +273,8 @@ function saveConfig(){
 		success: function (data) {
 			// If path isn't found, let the user know
 			var pathFound = $.parseJSON(data).found_path;
-			$('#pathNotFound').css('display', pathFound? 'none' : 'block');
+			if(pathFound) $('#pathNotFound').hide();
+			else $('#pathNotFound').show();
 		}
 	});
 }

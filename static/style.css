@@ -1,5 +1,33 @@
 body {
-  background-color: blue;
+  	background-color: blue;
+}
+
+.button:not(.disabled) {
+	background-color: #666;
+	cursor: pointer;
+	font-size: 16px;
+
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+}
+
+.button.disabled {
+	background-color: #DDD;
+	font-size: 16px;
+}
+
+.button:not(.disabled):hover {
+	background-color: #CCC;	
+}
+
+#downloadButton {
+    position: absolute;
+	bottom: 0px;
+	width: 100%;	
 }
 
 #formDialog img {
@@ -10,12 +38,18 @@ body {
 	/* Rounded Edges */
 	background-color: #FFF;	
 	-webkit-border-radius: 8px;
-    -moz-border-radius: 8px;
-    border-radius: 8px;
+        -moz-border-radius: 8px;
+        border-radius: 8px;
 	
+	display: block;
 	width: 400px;
-	margin-left: auto;
-	margin-right: auto;	
+        min-height: 50px;
+        max-height: 100%;
+        margin-left: auto;
+	margin-right: auto;
+        padding-bottom: 50px;
+	overflow: hidden;
+	position: relative;
 	text-align: center;
 }
 
@@ -25,9 +59,53 @@ body {
 }
 
 #songDiv {
-
+	text-align: center;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 70px;
+	margin-bottom: 20px;
+	top: 50px;
+	width: 420px;
 }
 
-#songForm {
+.songForm {
+	/* Rounded Edges */
+	background-color: #FFF;
+	-webkit-border-radius: 8px;
+        -moz-border-radius: 8px;
+        border-radius: 8px;
+	height: 50px;
+	display: inline;
+}
 
+.songForm input {
+	width: 75%;
+	float: left;
+}
+
+.songForm .button {
+	width: 10%;	
+	float: left;
+}
+
+#title {
+	display: inline;
+	height: 50px;
+	line-height: 50px;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+}
+
+#title #text {
+	width: 60%;	
+}
+
+#title .button {
+	width: 20%;	
+}
+
+#title div {
+	float: left;
 }
