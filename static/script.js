@@ -1,7 +1,6 @@
 /*
 TODO:
-- Retrieve metadata button
-- Get Thumbnail/name of video for dialog
+- Handling no name entered
 - CSS Setup
 */
 
@@ -136,7 +135,7 @@ function downloadSongs() {
 					finishedDownload(data["Success"], form, data["Message"]);
 				})
 			);
-		})(i);
+		})(i); // Use Closure in order to maintain index state async
 	}
 	return downloadQueue;
 }

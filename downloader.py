@@ -4,28 +4,34 @@ import random
 import string
 import ConfigParser
 import cherrypy
+from cherrypy.lib import auth_basic
 
-supported_formats = ['mp3', 'ogg']
+supported_formats = ['mp3']
 conf_file = 'downloader.conf'
 conf_section = 'settings'
 
-
-
 class Downloader(object):
 
+   # Adds quotation marks to input
    def formatInput(self, inputVal):
       return '"' + str(inputVal) + '"'
 
+   # Removes quotation marks from output
    def formatOutput(self, outputVal):
       return outputVal.lstrip('"').rstrip('"')
 
+   # Verifies that path given exists on OS
    def checkPathExists(self, path):
       return os.path.exists(self.formatOutput(path))
 
+   # Returns the html file
    @cherrypy.expose
    def index(self):
       return file('static/index.html')
 
+   # config method
+   # accepts JSON with new configuration settings to write
+   # returns JSON with current/updated configuration settings
    @cherrypy.expose
    @cherrypy.tools.json_out()
    @cherrypy.tools.json_in()
@@ -49,6 +55,9 @@ class Downloader(object):
       settings['found_path'] = self.checkPathExists(settings['download_path'])
       return json.dumps(settings)
 
+   # Download method
+   # Accepts JSON with url to download plus metadata, downloads to server based on config
+   # Returns JSON saying whether download was successful and a message with more details
    @cherrypy.expose
    @cherrypy.tools.json_in()
    @cherrypy.tools.json_out()
@@ -86,5 +95,30 @@ class Downloader(object):
       return response
 
 
+
+
+# intro for file
 if __name__ == '__main__':
-   cherrypy.quickstart(Downloader(), '/', 'downloader.conf')
+
+   # Read the config
+   configParser = cherrypy.lib.reprconf.Parser()
+   configParser.read(conf_file)
+   config = configParser.as_dict()
+
+   # Setting up a very basic authorization
+   USERS = {}
+   USERS[config[conf_section]["user_name"]] = config[conf_section]["password"]
+   def validate_password(realm, username, password):
+      if username in USERS and USERS[username] == password:
+         return True
+      return False
+
+   auth = {
+       'tools.auth_basic.on': True,
+       'tools.auth_basic.realm': 'localhost',
+       'tools.auth_basic.checkpassword': validate_password
+   }
+   config['/'].update(auth)
+
+   # Firing up the server
+   cherrypy.quickstart(Downloader(), '/', config)
