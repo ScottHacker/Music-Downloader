@@ -17,8 +17,8 @@ The code is still a work in progress and currently only supports mp3 format and 
 1. Install requirements on server
 2. Download repo
 3. Open configuration and change user_name, password, and port if you like.
-4. Run downloader.py (you can run it directly using **python downloader.py** or turn it into a daemon using **nohup python downloader.py &*)
-5. Open Web UI at **server.ip:8081** (or whatever port you changed it too)
+4. Run downloader.py (you can run it directly using *python downloader.py* or turn it into a daemon using *nohup python downloader.py &*)
+5. Open Web UI at *server.ip:8081* (or whatever port you changed it too)
 
 ## Usage
 
@@ -37,7 +37,7 @@ Web UI configuration options:
 - **Change Spaces to Underscores**: Converts all spaces in the name to underscores if set to true.  (Corresponds to spaces_to_underscores in the config file)
 - **Audio Format**: Picks which audio format the files should be saved at.  The options in the picklist are limited by the server's ability to process the formats.  (Corresponds to format in the config file)
 
-The configuration file is located in **downloader.conf**
+The configuration file is located in *downloader.conf*
 
 - **server.socket_host**: This limits what IP the server will listen to, 0.0.0.0 will accept connections from everywhere, where as 127.0.0.1 will only accept connections from localhost.  By default it is set to 0.0.0.0
 - **server.socket_port**: The port the server will run off, and subsequently the one that will need to be entered with the url to access (unless it's set to 80).  By default it's 8081.
